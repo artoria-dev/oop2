@@ -19,28 +19,34 @@ public class University
 	
 	public static void main(String[] args) 
 	{
+		File daten = new File("daten.csv");
+		
 		initialisiereStudiengang();
 		initialisiereKurse();
 		
 		//initialisiereStudenten();
 		System.out.println("Daten werden gelesen...");	
-		datenLesen();
+		datenLesen(daten);
 		System.out.println("Daten wurden gelesen!");
 		System.out.println();	
 		
-		initialisiereProfessoren();
+		//initialisiereProfessoren();
+		
 		kohortenZuweisung();
 		
 		//nachnamenAendern(personSuchen("Erik", "Priebe"), "Müller");
 		System.out.println("Anzahl der Kurse: " + kursListe.size());
 		
+		System.out.println("\nStudenten: ");	
 		ausgabeStudenten();
+		System.out.println("\nDozenten: ");	
+		ausgabeProfessoren();
 		
 		System.out.println();	
 		ausgabeKohoten();
 		
 		System.out.println("Daten werden gespeichert...");	
-		datenSpeichern();
+		datenSpeichern(daten);
 		System.out.println("Daten wurden gespeichert!");	
 	}
 
@@ -48,11 +54,14 @@ public class University
 		for(Student studi: studentenListe)
 			System.out.println(studi.getVorname() + " " + studi.getName() + ": " + studi.getStudiengang().bezeichnung);
 	}
+	
+	private static void ausgabeProfessoren() {
+		for(Professor prof: professorenListe)
+			System.out.println(prof.getTitel() + " " + prof.getVorname() + " " + prof.getName() + ", " + prof.getBerufsgebiet()  + ", " + gesToSg(prof.getGeschlecht()));
+	}
 
-	private static void datenLesen() {
-		try {
-			File datei = new File("studierende.csv");
-			
+	private static void datenLesen(File datei) {
+		try {			
 			Scanner leser = new Scanner(datei);
 			
 			while (leser.hasNextLine())
@@ -61,7 +70,7 @@ public class University
 				
 				//System.out.println(zeile);
 				
-				String[] inhalte = new String[4];
+				String[] inhalte = new String[6];
 				inhalte = zeile.split(";");
 				
 				/*System.out.println(inhalte[0]);
@@ -69,7 +78,11 @@ public class University
 				System.out.println(inhalte[2]);
 				System.out.println(inhalte[3]); */
 				
-				studentenListe.add(new Student(inhalte[0], inhalte[1], Integer.parseInt(inhalte[2]), sgBezToSG(inhalte[3])));
+				if(inhalte[0].equals("Student"))
+					studentenListe.add(new Student(inhalte[1], inhalte[2], Integer.parseInt(inhalte[3]), sgBezToSG(inhalte[4])));
+				
+				if(inhalte[0].equals("Professor"))
+					professorenListe.add(new Professor(inhalte[1], inhalte[2], inhalte[3], inhalte[4], sgToGes(inhalte[5])));	
 			}
 			leser.close();
 		}
@@ -78,12 +91,38 @@ public class University
 		}
 	}
 
-	private static void datenSpeichern() {
+	private static Geschlecht sgToGes(String string) {
+		
+		if(string.equals("Männlich"))
+			return Geschlecht.Männlich;
+		
+		if(string.equals("Weiblich"))
+			return Geschlecht.Weiblich;
+					
+		return Geschlecht.Divers;
+	}
+	
+	private static String gesToSg(Geschlecht geschlecht) {
+		
+		if(geschlecht == Geschlecht.Männlich)
+			return "Männlich";
+		
+		if(geschlecht == Geschlecht.Weiblich)
+			return "Weiblich";
+					
+		return "Divers";
+	}
+
+	private static void datenSpeichern(File datei) {
 		try {
-			FileWriter schreiber = new FileWriter("studierende.csv");
+			FileWriter schreiber = new FileWriter(datei);
 			for(Student studi: studentenListe)
 			{
-				schreiber.write(studi.getName() + ";" + studi.getVorname() + ";" + studi.getMatrikelnummer() + ";" + studi.getStudiengang().getBezeichnung() + "\n");
+				schreiber.write("Student" + ";" + studi.getName() + ";" + studi.getVorname() + ";" + studi.getMatrikelnummer() + ";" + studi.getStudiengang().getBezeichnung() + "\n");
+			}
+			for(Professor prof: professorenListe)
+			{
+				schreiber.write("Professor" + ";" + prof.getName() + ";" + prof.getVorname() + ";" + prof.getBerufsgebiet() + ";" + prof.getTitel() + ";" + gesToSg(prof.getGeschlecht()) + "\n");
 			}
 			schreiber.close();
 		}
